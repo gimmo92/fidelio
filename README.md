@@ -98,6 +98,19 @@ npm run dev
 
 Apri [http://localhost:3000](http://localhost:3000).
 
+### Auth (magic link)
+
+1. In Supabase → **Authentication → URL Configuration** aggiungi:
+   - Site URL: `http://localhost:3000` (o il dominio Vercel)
+   - Redirect URLs: `http://localhost:3000/auth/callback`, `https://TUO-DOMINIO/auth/callback`
+2. Crea utenti Auth con le stesse email dello seed (es. `titolare@autobasso.it`) **oppure** usa il magic link: al primo accesso Fidelio collega `auth_user_id` se l’email coincide con uno staff/cliente in anagrafica.
+3. Per i clienti demo, usa le email create dallo seed (es. `marco.rossi@email.it`).
+
+### Deploy Vercel
+
+Variabili obbligatorie sul progetto Vercel (stesse di `.env.example`).  
+Cron giornaliero: `vercel.json` → `/api/cron/reminders` alle 07:00 UTC (header `Authorization: Bearer CRON_SECRET`).
+
 ## Modello multi-tenant
 
 ```
