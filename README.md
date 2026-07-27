@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fidelio
 
-## Getting Started
+Piattaforma B2B di fidelizzazione clienti per concessionarie auto italiane.
 
-First, run the development server:
+Stack: **Next.js 15** · **TypeScript** · **Tailwind CSS** · **Supabase** (Postgres + Auth) · **Prisma** · deploy su **Vercel**.
+
+## Prerequisiti
+
+- Node.js 20+
+- Account [Supabase](https://supabase.com)
+- (Opzionale) CLI Vercel per i cron
+
+## Setup Supabase
+
+1. Crea un nuovo progetto Supabase (region consigliata: `eu-central-1`).
+2. In **Project Settings → Database** copia:
+   - **Connection string** in modalità *Transaction* (porta `6543`) → `DATABASE_URL`
+   - **Direct connection** (porta `5432`) → `DIRECT_URL`
+3. In **Project Settings → API** copia `URL` e `anon` key.
+4. Abilita **Email** auth (magic link) in **Authentication → Providers**.
+
+## Variabili ambiente
+
+Copia `.env.example` in `.env.local` e compila i valori:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variabile | Descrizione |
+|-----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL progetto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chiave anon (client) |
+| `DATABASE_URL` | Connection string pooled (Prisma runtime) |
+| `DIRECT_URL` | Connection string diretta (migrazioni) |
+| `CRON_SECRET` | Secret per proteggere `/api/cron/reminders` |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comandi Prisma
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Genera il client TypeScript
+npm run db:generate
 
-## Learn More
+# Applica lo schema al database (dev / primo setup)
+npm run db:push
 
-To learn more about Next.js, take a look at the following resources:
+# Oppure crea una migrazione versionata
+npm run db:migrate
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Apri Prisma Studio
+npm run db:studio
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Carica dati demo
+npm run db:seed
+```
 
-## Deploy on Vercel
+Dopo `db:push` o `db:migrate`, esegui le policy RLS:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Apri **Supabase → SQL Editor**
+2. Incolla e lancia il contenuto di `supabase/rls.sql`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Le Server Actions usano Prisma con `DATABASE_URL` (bypass RLS).  
+> Le policy proteggono l’accesso diretto via Supabase client (area clienti / client-side).
+
+## Seed demo
+
+```bash
+npm run db:seed
+```
+
+Crea:
+
+| Entità | Quantità |
+|--------|----------|
+| Gruppo | 1 — *Gruppo AutoBasso* |
+| Sedi | 2 — Torino Centro (FCA), Moncalieri (VW/Audi) |
+| Staff | 3 — OWNER / SALES / SERVICE |
+| Clienti | 25 |
+| Veicoli | 35 (targhe italiane, scadenze su 12 mesi) |
+| Interventi | storico realistico (inclusi “a rischio” 12+ mesi) |
+| Appuntamenti / promemoria | mix RICHIESTO / CONFERMATO / in coda |
+
+Account staff (collegare a Supabase Auth dopo il setup auth):
+
+- `titolare@autobasso.it` — OWNER, tutte le sedi
+- `vendite.torino@autobasso.it` — SALES, Torino
+- `officina.moncalieri@autobasso.it` — SERVICE, Moncalieri
+
+## Sviluppo locale
+
+```bash
+npm install
+npm run db:generate
+npm run db:push
+npm run db:seed
+npm run dev
+```
+
+Apri [http://localhost:3000](http://localhost:3000).
+
+## Modello multi-tenant
+
+```
+DealerGroup
+  ├── Location (sede, multi-brand)
+  ├── StaffUser (location_id null = tutte le sedi)
+  └── Customer (appartiene al gruppo)
+        └── Vehicle
+              ├── ServiceRecord  → Location
+              ├── Appointment    → Location
+              └── Reminder
+                    └── CommunicationLog
+```
+
+Isolamento tenant: `group_id` su JWT (`app_metadata`) + RLS in `supabase/rls.sql`.
+
+## Cosa NON è nell’MVP
+
+- Programma punti / livelli fedeltà
+- Invio reale email/SMS/WhatsApp (solo provider simulato)
+- Integrazione DMS
+- Pagamenti

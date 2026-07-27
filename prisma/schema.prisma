@@ -1,0 +1,256 @@
+// Fidelio — schema multi-tenant per concessionarie auto italiane
+// Tenant root: DealerGroup. Clienti a livello gruppo; operazioni a livello sede.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum StaffRole {
+  OWNER
+  SALES
+  SERVICE
+}
+
+enum PreferredChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum ServiceType {
+  TAGLIANDO
+  REVISIONE
+  GOMME
+  RIPARAZIONE
+  ALTRO
+}
+
+enum AppointmentStatus {
+  RICHIESTO
+  CONFERMATO
+  COMPLETATO
+  ANNULLATO
+}
+
+enum ReminderType {
+  REVISIONE
+  TAGLIANDO
+  GOMME_STAGIONALI
+  FINE_GARANZIA
+  FINE_FINANZIAMENTO
+  COMPLEANNO
+  ANNIVERSARIO_ACQUISTO
+}
+
+enum ReminderStatus {
+  PIANIFICATO
+  INVIATO
+  CONVERTITO
+  IGNORATO
+}
+
+enum CommunicationOutcome {
+  SIMULATO
+  INVIATO
+  ERRORE
+}
+
+// ─── Tenant ──────────────────────────────────────────────────────────────────
+
+model DealerGroup {
+  id        String   @id @default(cuid())
+  nome      String
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  locations Location[]
+  staff     StaffUser[]
+  customers Customer[]
+
+  @@map("dealer_groups")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  groupId   String   @map("group_id")
+  nome      String
+  indirizzo String
+  citta     String
+  telefono  String
+  brand     String[]
+
+  group              DealerGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  staff              StaffUser[]
+  serviceRecords     ServiceRecord[]
+  appointments       Appointment[]
+  vehiclesPurchased  Vehicle[]       @relation("PurchasedAt")
+
+  @@index([groupId])
+  @@map("locations")
+}
+
+// ─── Utenti ──────────────────────────────────────────────────────────────────
+
+/// Personale concessionaria. `authUserId` collega a Supabase Auth.
+/// `locationId` null = accesso a tutte le sedi del gruppo.
+model StaffUser {
+  id         String    @id @default(cuid())
+  authUserId String?   @unique @map("auth_user_id")
+  groupId    String    @map("group_id")
+  locationId String?   @map("location_id")
+  ruolo      StaffRole
+  email      String
+  nome       String
+
+  group    DealerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  location Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, email])
+  @@index([groupId])
+  @@index([authUserId])
+  @@map("staff_users")
+}
+
+/// Cliente finale. Appartiene al gruppo, non alla singola sede.
+/// `authUserId` opzionale: valorizzato al primo accesso magic link.
+model Customer {
+  id                String           @id @default(cuid())
+  authUserId        String?          @unique @map("auth_user_id")
+  groupId           String           @map("group_id")
+  nome              String
+  cognome           String
+  email             String
+  telefono          String
+  dataNascita       DateTime?        @map("data_nascita") @db.Date
+  consensoMarketing Boolean          @default(false) @map("consenso_marketing")
+  canalePreferito   PreferredChannel @default(EMAIL) @map("canale_preferito")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  group             DealerGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  vehicles          Vehicle[]
+  communications    CommunicationLog[]
+
+  @@unique([groupId, email])
+  @@index([groupId])
+  @@index([cognome, nome])
+  @@index([telefono])
+  @@index([authUserId])
+  @@map("customers")
+}
+
+// ─── Veicoli ─────────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id                       String    @id @default(cuid())
+  customerId               String    @map("customer_id")
+  targa                    String
+  vin                      String?
+  marca                    String
+  modello                  String
+  allestimento             String?
+  annoImmatricolazione         Int       @map("anno_immatricolazione")
+  kmAttuali                Int       @map("km_attuali")
+  kmAggiornatiIl           DateTime  @default(now()) @map("km_aggiornati_il") @db.Date
+  dataAcquisto             DateTime? @map("data_acquisto") @db.Date
+  acquistatoPressoLocationId String? @map("acquistato_presso_location_id")
+  fineGaranzia             DateTime? @map("fine_garanzia") @db.Date
+  fineFinanziamento        DateTime? @map("fine_finanziamento") @db.Date
+  prossimaRevisione        DateTime? @map("prossima_revisione") @db.Date
+  prossimoTagliandoData    DateTime? @map("prossimo_tagliando_data") @db.Date
+  prossimoTagliandoKm      Int?      @map("prossimo_tagliando_km")
+
+  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  acquistatoPresso  Location?         @relation("PurchasedAt", fields: [acquistatoPressoLocationId], references: [id], onDelete: SetNull)
+  serviceRecords    ServiceRecord[]
+  appointments      Appointment[]
+  reminders         Reminder[]
+
+  @@unique([targa])
+  @@index([customerId])
+  @@index([targa])
+  @@map("vehicles")
+}
+
+// ─── Operazioni (legate a sede) ──────────────────────────────────────────────
+
+model ServiceRecord {
+  id           String      @id @default(cuid())
+  vehicleId    String      @map("vehicle_id")
+  locationId   String      @map("location_id")
+  data         DateTime    @db.Date
+  tipo         ServiceType
+  descrizione  String
+  importo      Decimal     @db.Decimal(10, 2)
+  kmAlMomento  Int         @map("km_al_momento")
+
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([locationId])
+  @@index([data])
+  @@map("service_records")
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  vehicleId  String            @map("vehicle_id")
+  locationId String            @map("location_id")
+  dataOra    DateTime          @map("data_ora")
+  tipo       ServiceType
+  stato      AppointmentStatus @default(RICHIESTO)
+  note       String?
+
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([locationId])
+  @@index([dataOra])
+  @@index([stato])
+  @@map("appointments")
+}
+
+model Reminder {
+  id           String         @id @default(cuid())
+  vehicleId    String         @map("vehicle_id")
+  tipo         ReminderType
+  dataPrevista DateTime       @map("data_prevista") @db.Date
+  stato        ReminderStatus @default(PIANIFICATO)
+  inviatoIl    DateTime?      @map("inviato_il")
+
+  vehicle        Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  communications CommunicationLog[]
+
+  @@unique([vehicleId, tipo, dataPrevista])
+  @@index([vehicleId])
+  @@index([stato, dataPrevista])
+  @@map("reminders")
+}
+
+model CommunicationLog {
+  id         String                @id @default(cuid())
+  customerId String                @map("customer_id")
+  reminderId String?               @map("reminder_id")
+  canale     PreferredChannel
+  oggetto    String
+  corpo      String
+  inviatoIl  DateTime              @default(now()) @map("inviato_il")
+  esito      CommunicationOutcome  @default(SIMULATO)
+
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reminder Reminder? @relation(fields: [reminderId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([reminderId])
+  @@index([inviatoIl])
+  @@map("communication_logs")
+}
