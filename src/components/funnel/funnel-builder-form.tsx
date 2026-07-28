@@ -56,79 +56,30 @@ type DraftStep = {
   condizione: string;
 };
 
-type PaletteDrag =
-  | { kind: "channel"; canale: FunnelChannel }
-  | { kind: "mechanic"; tipo: FunnelStepKind };
+const CHANNELS: { value: FunnelChannel; label: string; icon: React.ReactNode }[] =
+  [
+    { value: "WHATSAPP", label: "WhatsApp", icon: <MessageCircle className="h-4 w-4" /> },
+    { value: "EMAIL", label: "Email", icon: <Mail className="h-4 w-4" /> },
+    { value: "SMS", label: "SMS", icon: <Smartphone className="h-4 w-4" /> },
+    { value: "EVENTO", label: "Evento", icon: <CalendarDays className="h-4 w-4" /> },
+    {
+      value: "CHIAMATA_STAFF",
+      label: "Chiamata staff",
+      icon: <Phone className="h-4 w-4" />,
+    },
+  ];
 
-const CHANNELS: {
-  canale: FunnelChannel;
-  label: string;
-  hint: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    canale: "WHATSAPP",
-    label: "WhatsApp",
-    hint: "Soft touch, conversazione",
-    icon: <MessageCircle className="h-4 w-4" />,
-  },
-  {
-    canale: "EMAIL",
-    label: "Email",
-    hint: "Offerte, seeding, storytelling",
-    icon: <Mail className="h-4 w-4" />,
-  },
-  {
-    canale: "SMS",
-    label: "SMS",
-    hint: "Last chance, urgenza",
-    icon: <Smartphone className="h-4 w-4" />,
-  },
-  {
-    canale: "EVENTO",
-    label: "Evento",
-    hint: "Porte aperte, status",
-    icon: <CalendarDays className="h-4 w-4" />,
-  },
-  {
-    canale: "CHIAMATA_STAFF",
-    label: "Chiamata staff",
-    hint: "Handoff umano",
-    icon: <Phone className="h-4 w-4" />,
-  },
-];
-
-const MECHANICS: {
-  tipo: FunnelStepKind;
-  label: string;
-  hint: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    tipo: "MESSAGGIO",
-    label: "Messaggio soft",
-    hint: "Nessuna pressione commerciale",
-    icon: <MessageCircle className="h-4 w-4" />,
-  },
-  {
-    tipo: "OFFERTA",
-    label: "Offerta a tempo",
-    hint: "Sconto, supervalutazione, slot",
-    icon: <Gift className="h-4 w-4" />,
-  },
-  {
-    tipo: "EVENTO",
-    label: "Evento / invito",
-    hint: "Leva di status e scarsità",
-    icon: <CalendarDays className="h-4 w-4" />,
-  },
-  {
-    tipo: "HANDOFF_STAFF",
-    label: "Passaggio staff",
-    hint: "Lista chiamate con contesto",
-    icon: <UserRound className="h-4 w-4" />,
-  },
-];
+const MECHANICS: { value: FunnelStepKind; label: string; icon: React.ReactNode }[] =
+  [
+    { value: "MESSAGGIO", label: "Messaggio soft", icon: <MessageCircle className="h-4 w-4" /> },
+    { value: "OFFERTA", label: "Offerta a tempo", icon: <Gift className="h-4 w-4" /> },
+    { value: "EVENTO", label: "Evento / invito", icon: <CalendarDays className="h-4 w-4" /> },
+    {
+      value: "HANDOFF_STAFF",
+      label: "Passaggio staff",
+      icon: <UserRound className="h-4 w-4" />,
+    },
+  ];
 
 function newId() {
   return `step-${Math.random().toString(36).slice(2, 10)}`;
@@ -139,15 +90,13 @@ function createStep(
   tipo: FunnelStepKind,
   order: number,
 ): DraftStep {
-  const channelLabel = FUNNEL_CHANNEL_LABELS[canale];
-  const tipoLabel = FUNNEL_STEP_KIND_LABELS[tipo];
   return {
     id: newId(),
     timingLabel: order === 0 ? "Giorno 0" : `Giorno ${order * 7}`,
     giornoOffset: order * 7,
     canale,
     tipo,
-    oggetto: `${tipoLabel} · ${channelLabel}`,
+    oggetto: `${FUNNEL_STEP_KIND_LABELS[tipo]} · ${FUNNEL_CHANNEL_LABELS[canale]}`,
     corpo: "",
     offerta: "",
     condizione: "",
@@ -156,12 +105,10 @@ function createStep(
 
 export function FunnelBuilderForm() {
   const [steps, setSteps] = useState<DraftStep[]>([]);
-  const [selectedChannel, setSelectedChannel] = useState<FunnelChannel | null>(
-    "WHATSAPP",
-  );
-  const [selectedMechanic, setSelectedMechanic] =
-    useState<FunnelStepKind | null>("MESSAGGIO");
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [blockChannel, setBlockChannel] = useState<FunnelChannel>("WHATSAPP");
+  const [blockMechanic, setBlockMechanic] =
+    useState<FunnelStepKind>("MESSAGGIO");
+  const [draggingBlock, setDraggingBlock] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [state, formAction, pending] = useActionState<
@@ -175,22 +122,32 @@ export function FunnelBuilderForm() {
 
   const payloadSteps = useMemo(
     () =>
-      steps.map(({ timingLabel, giornoOffset, canale, tipo, oggetto, corpo, offerta, condizione }) => ({
-        timingLabel,
-        giornoOffset,
-        canale,
-        tipo,
-        oggetto,
-        corpo,
-        offerta,
-        condizione,
-      })),
+      steps.map(
+        ({
+          timingLabel,
+          giornoOffset,
+          canale,
+          tipo,
+          oggetto,
+          corpo,
+          offerta,
+          condizione,
+        }) => ({
+          timingLabel,
+          giornoOffset,
+          canale,
+          tipo,
+          oggetto,
+          corpo,
+          offerta,
+          condizione,
+        }),
+      ),
     [steps],
   );
 
-  function addComposedStep() {
-    if (!selectedChannel || !selectedMechanic) return;
-    const step = createStep(selectedChannel, selectedMechanic, steps.length);
+  function appendStep(canale: FunnelChannel, tipo: FunnelStepKind) {
+    const step = createStep(canale, tipo, steps.length);
     setSteps((prev) => [...prev, step]);
     setExpandedId(step.id);
   }
@@ -205,86 +162,38 @@ export function FunnelBuilderForm() {
   }
 
   function onDragStart(event: DragStartEvent) {
-    setActiveId(String(event.active.id));
+    if (String(event.active.id) === "compose-block") {
+      setDraggingBlock(true);
+    }
   }
 
   function onDragEnd(event: DragEndEvent) {
-    setActiveId(null);
+    setDraggingBlock(false);
     const { active, over } = event;
     if (!over) return;
 
-    const activeData = active.data.current as
-      | { source: "palette"; payload: PaletteDrag }
-      | { source: "step" }
-      | undefined;
-
-    // Reorder existing steps
-    if (activeData?.source === "step" && String(active.id).startsWith("step-")) {
-      const oldIndex = steps.findIndex((s) => s.id === active.id);
-      const overId = String(over.id).replace("drop-", "");
-      const newIndex = steps.findIndex((s) => s.id === overId || s.id === over.id);
-      if (oldIndex >= 0 && newIndex >= 0 && oldIndex !== newIndex) {
-        setSteps((prev) => arrayMove(prev, oldIndex, newIndex));
+    // Drop composed block onto timeline
+    if (String(active.id) === "compose-block") {
+      const overId = String(over.id);
+      if (overId === "funnel-canvas" || overId.startsWith("drop-") || overId.startsWith("step-")) {
+        appendStep(blockChannel, blockMechanic);
       }
       return;
     }
 
-    // Drop palette item onto canvas
-    if (activeData?.source === "palette") {
-      const payload = activeData.payload;
-      const overId = String(over.id);
-
-      // Dropped on a specific step → update that step's channel or mechanic
-      const targetStepId = overId.startsWith("drop-")
-        ? overId.slice(5)
-        : steps.find((s) => s.id === overId)?.id;
-
-      if (targetStepId && steps.some((s) => s.id === targetStepId)) {
-        if (payload.kind === "channel") {
-          updateStep(targetStepId, { canale: payload.canale });
-          setSelectedChannel(payload.canale);
-        } else {
-          updateStep(targetStepId, { tipo: payload.tipo });
-          setSelectedMechanic(payload.tipo);
-        }
-        setExpandedId(targetStepId);
-        return;
-      }
-
-      // Dropped on canvas → create new step composing selection
-      if (overId === "funnel-canvas") {
-        const canale =
-          payload.kind === "channel"
-            ? payload.canale
-            : selectedChannel ?? "EMAIL";
-        const tipo =
-          payload.kind === "mechanic"
-            ? payload.tipo
-            : selectedMechanic ?? "MESSAGGIO";
-        if (payload.kind === "channel") setSelectedChannel(payload.canale);
-        if (payload.kind === "mechanic") setSelectedMechanic(payload.tipo);
-        const step = createStep(canale, tipo, steps.length);
-        setSteps((prev) => [...prev, step]);
-        setExpandedId(step.id);
+    // Reorder steps
+    if (String(active.id).startsWith("step-")) {
+      const oldIndex = steps.findIndex((s) => s.id === active.id);
+      const overRaw = String(over.id);
+      const overStepId = overRaw.startsWith("drop-")
+        ? overRaw.slice(5)
+        : overRaw;
+      const newIndex = steps.findIndex((s) => s.id === overStepId);
+      if (oldIndex >= 0 && newIndex >= 0 && oldIndex !== newIndex) {
+        setSteps((prev) => arrayMove(prev, oldIndex, newIndex));
       }
     }
   }
-
-  const activePalette = (() => {
-    if (!activeId?.startsWith("palette-")) return null;
-    if (activeId.startsWith("palette-channel-")) {
-      const canale = activeId.replace(
-        "palette-channel-",
-        "",
-      ) as FunnelChannel;
-      return CHANNELS.find((c) => c.canale === canale) ?? null;
-    }
-    if (activeId.startsWith("palette-mechanic-")) {
-      const tipo = activeId.replace("palette-mechanic-", "") as FunnelStepKind;
-      return MECHANICS.find((m) => m.tipo === tipo) ?? null;
-    }
-    return null;
-  })();
 
   return (
     <form action={formAction} className="space-y-8">
@@ -359,9 +268,8 @@ export function FunnelBuilderForm() {
         <div>
           <h2 className="font-semibold">Componi il funnel</h2>
           <p className="text-sm text-muted">
-            Seleziona o trascina un <strong>canale</strong> e una{" "}
-            <strong>meccanica</strong> sulla timeline. Trascina gli step per
-            riordinarli; rilascia un pezzo su uno step per cambiarlo.
+            Nel blocco scegli <strong>canale</strong> e <strong>meccanica</strong>,
+            poi trascinalo sulla timeline. Riordina gli step trascinandoli.
           </p>
         </div>
 
@@ -371,69 +279,22 @@ export function FunnelBuilderForm() {
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >
-          <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-            <aside className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm lg:sticky lg:top-4 lg:self-start">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  Canali
-                </p>
-                <div className="mt-2 space-y-2">
-                  {CHANNELS.map((c) => (
-                    <PaletteChip
-                      key={c.canale}
-                      id={`palette-channel-${c.canale}`}
-                      selected={selectedChannel === c.canale}
-                      onSelect={() => setSelectedChannel(c.canale)}
-                      payload={{ kind: "channel", canale: c.canale }}
-                      icon={c.icon}
-                      label={c.label}
-                      hint={c.hint}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  Meccaniche
-                </p>
-                <div className="mt-2 space-y-2">
-                  {MECHANICS.map((m) => (
-                    <PaletteChip
-                      key={m.tipo}
-                      id={`palette-mechanic-${m.tipo}`}
-                      selected={selectedMechanic === m.tipo}
-                      onSelect={() => setSelectedMechanic(m.tipo)}
-                      payload={{ kind: "mechanic", tipo: m.tipo }}
-                      icon={m.icon}
-                      label={m.label}
-                      hint={m.hint}
-                    />
-                  ))}
-                </div>
-              </div>
-              <Button
-                type="button"
-                className="w-full"
-                onClick={addComposedStep}
-                disabled={!selectedChannel || !selectedMechanic}
-              >
-                Aggiungi alla timeline
-              </Button>
-              {selectedChannel && selectedMechanic && (
-                <p className="text-center text-xs text-muted">
-                  {FUNNEL_CHANNEL_LABELS[selectedChannel]} ·{" "}
-                  {FUNNEL_STEP_KIND_LABELS[selectedMechanic]}
-                </p>
-              )}
-            </aside>
+          <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+            <ComposeBlock
+              channel={blockChannel}
+              mechanic={blockMechanic}
+              onChannelChange={setBlockChannel}
+              onMechanicChange={setBlockMechanic}
+              onAdd={() => appendStep(blockChannel, blockMechanic)}
+            />
 
-            <FunnelCanvas steps={steps}>
+            <FunnelCanvas count={steps.length}>
               {steps.length === 0 ? (
                 <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white/60 px-6 py-12 text-center">
                   <p className="font-medium">Timeline vuota</p>
                   <p className="mt-1 max-w-sm text-sm text-muted">
-                    Trascina qui un canale o una meccanica, oppure selezionali
-                    nella palette e clicca «Aggiungi alla timeline».
+                    Configura canale + meccanica nel blocco a sinistra e
+                    trascinalo qui.
                   </p>
                 </div>
               ) : (
@@ -464,9 +325,15 @@ export function FunnelBuilderForm() {
           </div>
 
           <DragOverlay>
-            {activePalette ? (
-              <div className="rounded-lg border border-accent bg-white px-3 py-2 text-sm shadow-lg">
-                <span className="font-medium">{activePalette.label}</span>
+            {draggingBlock ? (
+              <div className="w-72 rounded-xl border border-accent bg-white p-4 shadow-xl">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Azione
+                </p>
+                <p className="mt-2 text-sm font-semibold">
+                  {FUNNEL_CHANNEL_LABELS[blockChannel]} ·{" "}
+                  {FUNNEL_STEP_KIND_LABELS[blockMechanic]}
+                </p>
               </div>
             ) : null}
           </DragOverlay>
@@ -484,63 +351,126 @@ export function FunnelBuilderForm() {
   );
 }
 
-function PaletteChip({
-  id,
-  selected,
-  onSelect,
-  payload,
-  icon,
-  label,
-  hint,
+function ComposeBlock({
+  channel,
+  mechanic,
+  onChannelChange,
+  onMechanicChange,
+  onAdd,
 }: {
-  id: string;
-  selected: boolean;
-  onSelect: () => void;
-  payload: PaletteDrag;
-  icon: React.ReactNode;
-  label: string;
-  hint: string;
+  channel: FunnelChannel;
+  mechanic: FunnelStepKind;
+  onChannelChange: (c: FunnelChannel) => void;
+  onMechanicChange: (t: FunnelStepKind) => void;
+  onAdd: () => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id,
-    data: { source: "palette", payload },
+    id: "compose-block",
+    data: {
+      source: "compose",
+      canale: channel,
+      tipo: mechanic,
+    },
   });
 
   return (
-    <button
-      type="button"
+    <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={onSelect}
       className={cn(
-        "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left transition",
-        selected
-          ? "border-accent bg-accent-soft text-accent"
-          : "border-border bg-white hover:border-accent/40",
+        "rounded-xl border border-border bg-card p-4 shadow-sm lg:sticky lg:top-4 lg:self-start",
         isDragging && "opacity-40",
       )}
     >
-      <span className="mt-0.5 shrink-0">{icon}</span>
-      <span>
-        <span className="block text-sm font-medium">{label}</span>
-        <span className="block text-xs opacity-80">{hint}</span>
-      </span>
-    </button>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">Blocco azione</p>
+        <button
+          type="button"
+          className="cursor-grab touch-none rounded-md border border-border p-1.5 text-muted hover:bg-slate-50 active:cursor-grabbing"
+          aria-label="Trascina sulla timeline"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        Seleziona canale e meccanica nello stesso blocco, poi trascina.
+      </p>
+
+      <div className="mt-4 space-y-4">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            Canale
+          </p>
+          <div className="grid grid-cols-1 gap-1.5">
+            {CHANNELS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => onChannelChange(c.value)}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
+                  channel === c.value
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border bg-white hover:border-accent/40",
+                )}
+              >
+                {c.icon}
+                <span className="font-medium">{c.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            Meccanica
+          </p>
+          <div className="grid grid-cols-1 gap-1.5">
+            {MECHANICS.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => onMechanicChange(m.value)}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
+                  mechanic === m.value
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border bg-white hover:border-accent/40",
+                )}
+              >
+                {m.icon}
+                <span className="font-medium">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-dashed border-accent/40 bg-accent-soft/50 px-3 py-3">
+        <p className="text-xs text-muted">Anteprima blocco</p>
+        <p className="mt-1 text-sm font-semibold text-accent">
+          {FUNNEL_CHANNEL_LABELS[channel]} · {FUNNEL_STEP_KIND_LABELS[mechanic]}
+        </p>
+        <p className="mt-2 text-xs text-muted">
+          Trascina dalla maniglia in alto, oppure:
+        </p>
+        <Button type="button" size="sm" className="mt-2 w-full" onClick={onAdd}>
+          Aggiungi alla timeline
+        </Button>
+      </div>
+    </div>
   );
 }
 
 function FunnelCanvas({
   children,
-  steps,
+  count,
 }: {
   children: React.ReactNode;
-  steps: DraftStep[];
+  count: number;
 }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "funnel-canvas",
-    data: { accepts: "palette" },
-  });
+  const { setNodeRef, isOver } = useDroppable({ id: "funnel-canvas" });
 
   return (
     <div
@@ -552,7 +482,7 @@ function FunnelCanvas({
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold">Timeline funnel</p>
-        <p className="text-xs text-muted">{steps.length} step</p>
+        <p className="text-xs text-muted">{count} step</p>
       </div>
       {children}
     </div>
@@ -581,14 +511,10 @@ function SortableStepCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id: step.id,
-    data: { source: "step" },
-  });
+  } = useSortable({ id: step.id });
 
-  const dropId = `drop-${step.id}`;
   const { setNodeRef: setDropRef, isOver } = useDroppable({
-    id: dropId,
+    id: `drop-${step.id}`,
   });
 
   const style = {
@@ -654,6 +580,38 @@ function SortableStepCard({
         <div className="space-y-3 border-t border-border px-4 py-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1 text-sm">
+              <span className="font-medium text-slate-700">Canale</span>
+              <select
+                className="h-10 w-full rounded-lg border border-border px-3 text-sm"
+                value={step.canale}
+                onChange={(e) =>
+                  onChange({ canale: e.target.value as FunnelChannel })
+                }
+              >
+                {CHANNELS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-slate-700">Meccanica</span>
+              <select
+                className="h-10 w-full rounded-lg border border-border px-3 text-sm"
+                value={step.tipo}
+                onChange={(e) =>
+                  onChange({ tipo: e.target.value as FunnelStepKind })
+                }
+              >
+                {MECHANICS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1 text-sm">
               <span className="font-medium text-slate-700">Timing</span>
               <input
                 className="h-10 w-full rounded-lg border border-border px-3 text-sm"
@@ -688,7 +646,6 @@ function SortableStepCard({
               value={step.corpo}
               onChange={(e) => onChange({ corpo: e.target.value })}
               placeholder="Testo dell'azione…"
-              required
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
