@@ -370,6 +370,8 @@ async function main() {
             corpo: s.corpo,
             offerta: s.offerta,
             condizione: s.condizione,
+            kpiClienti: s.kpiClienti,
+            kpiConversione: s.kpiConversione,
           })),
         },
       },

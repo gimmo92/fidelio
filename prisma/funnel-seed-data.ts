@@ -26,6 +26,8 @@ export const DEMO_FUNNELS = [
         offerta:
           "Check-up gratuito 20 minuti (free service hook: costo marginale quasi zero, 30–40% genera intervento pagato)",
         condizione: null as string | null,
+        kpiClienti: 420,
+        kpiConversione: 18.5,
       },
       {
         ordine: 2,
@@ -38,6 +40,8 @@ export const DEMO_FUNNELS = [
           "Tagliando completo a -20% per prenotazioni entro il 15 settembre. Include controllo climatizzatore omaggio. Countdown visibile, CTA diretta alla prenotazione online.",
         offerta: "Tagliando -20% + clima omaggio · scadenza 15 settembre",
         condizione: "Solo se non ha risposto allo step WhatsApp",
+        kpiClienti: 342,
+        kpiConversione: 9.2,
       },
       {
         ordine: 3,
@@ -50,6 +54,8 @@ export const DEMO_FUNNELS = [
           "Ultimi 2 giorni per il -20% sul tagliando della sua Golf. Prenota qui: [link]",
         offerta: "Last chance · 48 ore prima della scadenza",
         condizione: "48 ore prima della scadenza offerta",
+        kpiClienti: 311,
+        kpiConversione: 4.8,
       },
       {
         ordine: 4,
@@ -62,6 +68,8 @@ export const DEMO_FUNNELS = [
           "Il cliente passa in stato «dormiente profondo» e finisce nella lista chiamate manuali della dashboard. L'automazione ha filtrato chi si riattiva da solo.",
         offerta: null,
         condizione: "Se ancora nessuna risposta / conversione",
+        kpiClienti: 268,
+        kpiConversione: 11.0,
       },
     ],
   },
@@ -90,6 +98,8 @@ export const DEMO_FUNNELS = [
           "La sua Tiguan compie 4 anni: le inviamo una valutazione indicativa gratuita del suo usato, senza impegno. Vale la pena sapere quanto vale oggi.",
         offerta: "Lead magnet: valutazione gratuita usato",
         condizione: null,
+        kpiClienti: 186,
+        kpiConversione: 24.0,
       },
       {
         ordine: 2,
@@ -102,6 +112,8 @@ export const DEMO_FUNNELS = [
           "La valutazione della sua Tiguan: 16.500€. Fino al 30 novembre riconosciamo una supervalutazione di +1.500€ sulla permuta per i modelli in promozione. Vuole passare a vederli sabato?",
         offerta: "Supervalutazione +1.500€ sulla permuta · fino al 30 novembre",
         condizione: "Solo chi ha chiesto la valutazione",
+        kpiClienti: 45,
+        kpiConversione: 31.0,
       },
       {
         ordine: 3,
@@ -114,6 +126,8 @@ export const DEMO_FUNNELS = [
           "Invito a porte aperte / anteprima nuovo modello riservata ai clienti storici, con slot su prenotazione. Leva di status: «riservato ai clienti della concessionaria».",
         offerta: "Evento riservato con slot prenotabili",
         condizione: null,
+        kpiClienti: 38,
+        kpiConversione: 42.0,
       },
       {
         ordine: 4,
@@ -126,6 +140,8 @@ export const DEMO_FUNNELS = [
           "Chi non ha convertito passa alla lista chiamate con tutto il contesto in scheda: valutazione fatta, offerte inviate, aperture email.",
         offerta: null,
         condizione: "Non convertiti dopo evento",
+        kpiClienti: 22,
+        kpiConversione: 27.0,
       },
     ],
   },
@@ -155,6 +171,8 @@ export const DEMO_FUNNELS = [
           "Completa il profilo della tua auto (2 minuti: km attuali e gomme montate) e partecipi all'estrazione di un treno di gomme invernali omaggio. Estrazione il 31 ottobre.",
         offerta: "Estrazione treno gomme invernali · 31 ottobre",
         condizione: "Invio anche su WhatsApp in parallelo",
+        kpiClienti: 980,
+        kpiConversione: 14.0,
       },
       {
         ordine: 2,
@@ -167,6 +185,8 @@ export const DEMO_FUNNELS = [
           "Hai aperto l'invito ma non hai ancora completato il profilo: bastano 2 minuti per partecipare all'estrazione delle gomme invernali.",
         offerta: null,
         condizione: "Solo chi ha aperto e non completato (+15–20% recupero tipico)",
+        kpiClienti: 210,
+        kpiConversione: 19.0,
       },
       {
         ordine: 3,
@@ -179,6 +199,8 @@ export const DEMO_FUNNELS = [
           "Cambio gomme: solo 40 slot disponibili tra il 20 ottobre e il 10 novembre, prenotabili online. Deposito gomme incluso per chi prenota entro il 25.",
         offerta: "40 slot · deposito incluso se prenota entro il 25",
         condizione: "A tutti (profilo completo o no) — scarsità sugli slot, non sullo sconto",
+        kpiClienti: 980,
+        kpiConversione: 4.1,
       },
       {
         ordine: 4,
@@ -191,6 +213,8 @@ export const DEMO_FUNNELS = [
           "Annuncio vincitore a tutta la base, con foto del cliente che ritira il premio (previo consenso). Secondo momento di marketing: prova sociale e anticipazione edizione primaverile.",
         offerta: null,
         condizione: "Consenso foto obbligatorio",
+        kpiClienti: 980,
+        kpiConversione: 62.0,
       },
     ],
   },

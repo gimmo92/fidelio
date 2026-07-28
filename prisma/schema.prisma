@@ -315,17 +315,19 @@ model MarketingFunnel {
 }
 
 model FunnelStep {
-  id          String         @id @default(cuid())
-  funnelId    String         @map("funnel_id")
-  ordine      Int
-  giornoOffset Int           @map("giorno_offset")
-  timingLabel String         @map("timing_label")
-  canale      FunnelChannel
-  tipo        FunnelStepKind @default(SHORT_TIME_OFFER)
-  oggetto     String?
-  corpo       String
-  offerta     String?
-  condizione  String?
+  id             String         @id @default(cuid())
+  funnelId       String         @map("funnel_id")
+  ordine         Int
+  giornoOffset   Int            @map("giorno_offset")
+  timingLabel    String         @map("timing_label")
+  canale         FunnelChannel
+  tipo           FunnelStepKind @default(SHORT_TIME_OFFER)
+  oggetto        String?
+  corpo          String
+  offerta        String?
+  condizione     String?
+  kpiClienti     Int?           @map("kpi_clienti")
+  kpiConversione Float?         @map("kpi_conversione")
 
   funnel MarketingFunnel @relation(fields: [funnelId], references: [id], onDelete: Cascade)
 

@@ -63,6 +63,8 @@ type DraftStep = {
   corpo: string;
   offerta: string;
   condizione: string;
+  kpiClienti: number | "";
+  kpiConversione: number | "";
 };
 
 const CHANNELS: { value: FunnelChannel; label: string; icon: React.ReactNode }[] =
@@ -141,6 +143,8 @@ function createStep(
     corpo: "",
     offerta: "",
     condizione: "",
+    kpiClienti: "",
+    kpiConversione: "",
   };
 }
 
@@ -173,6 +177,8 @@ export function FunnelBuilderForm() {
           corpo,
           offerta,
           condizione,
+          kpiClienti,
+          kpiConversione,
         }) => ({
           timingLabel,
           giornoOffset,
@@ -182,6 +188,8 @@ export function FunnelBuilderForm() {
           corpo,
           offerta,
           condizione,
+          kpiClienti: kpiClienti === "" ? null : kpiClienti,
+          kpiConversione: kpiConversione === "" ? null : kpiConversione,
         }),
       ),
     [steps],
@@ -616,6 +624,17 @@ function SortableStepCard({
               {FUNNEL_STEP_KIND_LABELS[step.tipo]}
             </span>
             <span className="text-xs text-muted">{step.timingLabel}</span>
+            {(step.kpiClienti !== "" || step.kpiConversione !== "") && (
+              <span className="rounded-md border border-border bg-white px-2 py-0.5 text-xs tabular-nums text-slate-700">
+                {step.kpiClienti !== "" && (
+                  <span>{step.kpiClienti.toLocaleString("it-IT")} clienti</span>
+                )}
+                {step.kpiClienti !== "" && step.kpiConversione !== "" && " · "}
+                {step.kpiConversione !== "" && (
+                  <span className="text-accent">{step.kpiConversione}%</span>
+                )}
+              </span>
+            )}
           </div>
           <p className="mt-1 truncate text-sm text-slate-600">
             {step.oggetto || step.corpo || "Clicca per compilare il contenuto…"}
@@ -720,6 +739,40 @@ function SortableStepCard({
                 value={step.condizione}
                 onChange={(e) => onChange({ condizione: e.target.value })}
                 placeholder="Es. Solo se non ha risposto"
+              />
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-slate-700">KPI · n. clienti</span>
+              <input
+                type="number"
+                min={0}
+                className="h-10 w-full rounded-lg border border-border px-3 text-sm"
+                value={step.kpiClienti}
+                onChange={(e) =>
+                  onChange({
+                    kpiClienti:
+                      e.target.value === "" ? "" : Number(e.target.value),
+                  })
+                }
+                placeholder="Es. 420"
+              />
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-slate-700">KPI · % conversione</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                className="h-10 w-full rounded-lg border border-border px-3 text-sm"
+                value={step.kpiConversione}
+                onChange={(e) =>
+                  onChange({
+                    kpiConversione:
+                      e.target.value === "" ? "" : Number(e.target.value),
+                  })
+                }
+                placeholder="Es. 12.5"
               />
             </label>
           </div>

@@ -183,6 +183,33 @@ export default async function FunnelDetailPage({
                   </p>
                 )}
               </div>
+              {(step.kpiClienti != null || step.kpiConversione != null) && (
+                <div className="w-36 shrink-0 rounded-lg border border-border bg-white p-3 text-center shadow-sm sm:w-40">
+                  {step.kpiClienti != null && (
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Clienti
+                      </p>
+                      <p className="mt-0.5 text-xl font-semibold tabular-nums text-foreground">
+                        {step.kpiClienti.toLocaleString("it-IT")}
+                      </p>
+                    </div>
+                  )}
+                  {step.kpiConversione != null && (
+                    <div className={step.kpiClienti != null ? "mt-3 border-t border-border pt-3" : ""}>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                        Conversione
+                      </p>
+                      <p className="mt-0.5 text-xl font-semibold tabular-nums text-accent">
+                        {step.kpiConversione.toLocaleString("it-IT", {
+                          maximumFractionDigits: 1,
+                        })}
+                        %
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ol>

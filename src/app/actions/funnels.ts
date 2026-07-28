@@ -44,6 +44,8 @@ const stepSchema = z.object({
   corpo: z.string().trim().min(1, "Corpo messaggio obbligatorio"),
   offerta: z.string().optional().nullable(),
   condizione: z.string().optional().nullable(),
+  kpiClienti: z.coerce.number().int().min(0).optional().nullable(),
+  kpiConversione: z.coerce.number().min(0).max(100).optional().nullable(),
 });
 
 export async function createFunnel(
@@ -115,6 +117,8 @@ export async function createFunnel(
             corpo: s.corpo,
             offerta: s.offerta || null,
             condizione: s.condizione || null,
+            kpiClienti: s.kpiClienti ?? null,
+            kpiConversione: s.kpiConversione ?? null,
           })),
         },
       },
