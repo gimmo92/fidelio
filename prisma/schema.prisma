@@ -87,9 +87,14 @@ enum FunnelChannel {
 }
 
 enum FunnelStepKind {
-  MESSAGGIO
-  OFFERTA
-  EVENTO
+  SWEEPSTAKE
+  CONTEST
+  CASHBACK_TRYBUY
+  SHORT_TIME_OFFER
+  SHORT_TERM_COLLECTION
+  LONG_TERM_COLLECTION
+  MEMBER_GET_MEMBER
+  INSTANT_WIN
   HANDOFF_STAFF
 }
 
@@ -316,7 +321,7 @@ model FunnelStep {
   giornoOffset Int           @map("giorno_offset")
   timingLabel String         @map("timing_label")
   canale      FunnelChannel
-  tipo        FunnelStepKind @default(MESSAGGIO)
+  tipo        FunnelStepKind @default(SHORT_TIME_OFFER)
   oggetto     String?
   corpo       String
   offerta     String?

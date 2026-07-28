@@ -21,21 +21,30 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Award,
   CalendarDays,
+  Dices,
   Gift,
   GripVertical,
+  Layers,
   Mail,
   MessageCircle,
   Phone,
+  RefreshCw,
   Smartphone,
+  Sparkles,
+  Target,
   Trash2,
-  UserRound,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react";
 import { createFunnel } from "@/app/actions/funnels";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import {
   FUNNEL_CHANNEL_LABELS,
+  FUNNEL_MECHANIC_META,
   FUNNEL_STEP_KIND_LABELS,
   FUNNEL_TRIGGERS,
   FUNNEL_TRIGGER_LABELS,
@@ -69,17 +78,49 @@ const CHANNELS: { value: FunnelChannel; label: string; icon: React.ReactNode }[]
     },
   ];
 
-const MECHANICS: { value: FunnelStepKind; label: string; icon: React.ReactNode }[] =
-  [
-    { value: "MESSAGGIO", label: "Messaggio soft", icon: <MessageCircle className="h-4 w-4" /> },
-    { value: "OFFERTA", label: "Offerta a tempo", icon: <Gift className="h-4 w-4" /> },
-    { value: "EVENTO", label: "Evento / invito", icon: <CalendarDays className="h-4 w-4" /> },
-    {
-      value: "HANDOFF_STAFF",
-      label: "Passaggio staff",
-      icon: <UserRound className="h-4 w-4" />,
-    },
-  ];
+const MECHANICS: {
+  value: FunnelStepKind;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { value: "SWEEPSTAKE", label: "Sweepstake", icon: <Dices className="h-4 w-4" /> },
+  { value: "CONTEST", label: "Contest", icon: <Trophy className="h-4 w-4" /> },
+  {
+    value: "CASHBACK_TRYBUY",
+    label: "Cashback / Try&Buy",
+    icon: <RefreshCw className="h-4 w-4" />,
+  },
+  {
+    value: "SHORT_TIME_OFFER",
+    label: "Short Time Offer",
+    icon: <Zap className="h-4 w-4" />,
+  },
+  {
+    value: "SHORT_TERM_COLLECTION",
+    label: "Short Term Collection",
+    icon: <Layers className="h-4 w-4" />,
+  },
+  {
+    value: "LONG_TERM_COLLECTION",
+    label: "Long Term Collection",
+    icon: <Award className="h-4 w-4" />,
+  },
+  {
+    value: "MEMBER_GET_MEMBER",
+    label: "Member Get Member",
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    value: "INSTANT_WIN",
+    label: "Instant win",
+    icon: <Sparkles className="h-4 w-4" />,
+  },
+  {
+    value: "HANDOFF_STAFF",
+    label: "Passaggio staff",
+    icon: <Target className="h-4 w-4" />,
+  },
+];
 
 function newId() {
   return `step-${Math.random().toString(36).slice(2, 10)}`;
@@ -107,7 +148,7 @@ export function FunnelBuilderForm() {
   const [steps, setSteps] = useState<DraftStep[]>([]);
   const [blockChannel, setBlockChannel] = useState<FunnelChannel>("WHATSAPP");
   const [blockMechanic, setBlockMechanic] =
-    useState<FunnelStepKind>("MESSAGGIO");
+    useState<FunnelStepKind>("SHORT_TIME_OFFER");
   const [draggingBlock, setDraggingBlock] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -279,7 +320,7 @@ export function FunnelBuilderForm() {
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
         >
-          <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+          <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
             <ComposeBlock
               channel={blockChannel}
               mechanic={blockMechanic}
@@ -424,23 +465,28 @@ function ComposeBlock({
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
-            Meccanica
+            Meccanica loyalty
           </p>
-          <div className="grid grid-cols-1 gap-1.5">
+          <div className="grid max-h-72 grid-cols-1 gap-1.5 overflow-y-auto pr-1">
             {MECHANICS.map((m) => (
               <button
                 key={m.value}
                 type="button"
                 onClick={() => onMechanicChange(m.value)}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
+                  "flex items-start gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
                   mechanic === m.value
                     ? "border-accent bg-accent-soft text-accent"
                     : "border-border bg-white hover:border-accent/40",
                 )}
               >
-                {m.icon}
-                <span className="font-medium">{m.label}</span>
+                <span className="mt-0.5 shrink-0">{m.icon}</span>
+                <span>
+                  <span className="block font-medium">{m.label}</span>
+                  <span className="block text-[11px] opacity-75">
+                    {FUNNEL_MECHANIC_META[m.value].stage}
+                  </span>
+                </span>
               </button>
             ))}
           </div>
@@ -452,7 +498,16 @@ function ComposeBlock({
         <p className="mt-1 text-sm font-semibold text-accent">
           {FUNNEL_CHANNEL_LABELS[channel]} · {FUNNEL_STEP_KIND_LABELS[mechanic]}
         </p>
-        <p className="mt-2 text-xs text-muted">
+        <p className="mt-1 text-[11px] font-medium text-slate-600">
+          {FUNNEL_MECHANIC_META[mechanic].subtitle}
+        </p>
+        <p className="mt-2 text-xs text-slate-600">
+          {FUNNEL_MECHANIC_META[mechanic].description}
+        </p>
+        <p className="mt-2 text-[11px] text-muted">
+          KPI: {FUNNEL_MECHANIC_META[mechanic].kpi.join(" · ")}
+        </p>
+        <p className="mt-3 text-xs text-muted">
           Trascina dalla maniglia in alto, oppure:
         </p>
         <Button type="button" size="sm" className="mt-2 w-full" onClick={onAdd}>

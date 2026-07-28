@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/funnels";
 import {
   FUNNEL_CHANNEL_LABELS,
+  FUNNEL_MECHANIC_META,
   FUNNEL_STATUS_LABELS,
   FUNNEL_STEP_KIND_LABELS,
   FUNNEL_TRIGGER_LABELS,
@@ -156,10 +157,17 @@ export default async function FunnelDetailPage({
                   <Badge tone="neutral">
                     {FUNNEL_STEP_KIND_LABELS[step.tipo]}
                   </Badge>
+                  <span className="text-xs text-muted">
+                    {FUNNEL_MECHANIC_META[step.tipo].stage}
+                  </span>
                   {step.oggetto && (
                     <span className="text-sm font-semibold">{step.oggetto}</span>
                   )}
                 </div>
+                <p className="mt-1 text-xs text-muted">
+                  {FUNNEL_MECHANIC_META[step.tipo].subtitle} —{" "}
+                  {FUNNEL_MECHANIC_META[step.tipo].description}
+                </p>
                 <p className="mt-3 text-sm text-slate-700 whitespace-pre-wrap">
                   {step.corpo}
                 </p>

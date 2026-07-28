@@ -8,7 +8,7 @@ export const DEMO_FUNNELS = [
     triggerNota:
       "Nessun intervento da 12+ mesi — segnale predittivo di churn: chi abbandona l'officina non torna nemmeno per il riacquisto.",
     meccanica:
-      "Offerta a tempo con urgenza crescente. Il valore percepito aumenta man mano che il funnel avanza, ma la finestra si chiude.",
+      "Try&Buy (check-up gratuito) → Short Time Offer con urgenza crescente → handoff staff sui dormienti profondi.",
     kpiTarget:
       "Tasso riattivazione (target 8–15% sui dormienti), revenue officina generata per messaggio inviato.",
     notaCompliance: null as string | null,
@@ -19,7 +19,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 0,
         timingLabel: "Giorno 0",
         canale: "WHATSAPP" as const,
-        tipo: "MESSAGGIO" as const,
+        tipo: "CASHBACK_TRYBUY" as const,
         oggetto: "Check-up gratuito",
         corpo:
           "Gentile Marco, è passato un po' di tempo dall'ultimo controllo della sua Golf. Se vuole, le prenotiamo un check-up gratuito di 20 minuti: freni, batteria, livelli. Risponde qui e ci pensiamo noi.",
@@ -32,7 +32,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 7,
         timingLabel: "Giorno 7",
         canale: "EMAIL" as const,
-        tipo: "OFFERTA" as const,
+        tipo: "SHORT_TIME_OFFER" as const,
         oggetto: "Tagliando -20% a scadenza",
         corpo:
           "Tagliando completo a -20% per prenotazioni entro il 15 settembre. Include controllo climatizzatore omaggio. Countdown visibile, CTA diretta alla prenotazione online.",
@@ -44,7 +44,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 13,
         timingLabel: "Giorno 13",
         canale: "SMS" as const,
-        tipo: "OFFERTA" as const,
+        tipo: "SHORT_TIME_OFFER" as const,
         oggetto: "Last chance -20%",
         corpo:
           "Ultimi 2 giorni per il -20% sul tagliando della sua Golf. Prenota qui: [link]",
@@ -73,7 +73,7 @@ export const DEMO_FUNNELS = [
     triggerNota:
       "Fine finanziamento entro 6 mesi, oppure veicolo ≥ 4 anni. Il trigger finanziamento è il più forte: il cliente sta già confrontando rata nuova vs auto vecchia.",
     meccanica:
-      "Short collection window — supervalutazione dell'usato valida solo per un periodo breve, eventualmente legata a un evento in sede. Scarità naturale e credibile.",
+      "Try&Buy (valutazione gratuita) → STO supervalutazione → Short Term Collection sull'evento → handoff staff.",
     kpiTarget:
       "Tasso di riacquisto interno, valutazioni richieste, presenze evento.",
     notaCompliance: null,
@@ -84,7 +84,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: -180,
         timingLabel: "Mese -6",
         canale: "EMAIL" as const,
-        tipo: "MESSAGGIO" as const,
+        tipo: "CASHBACK_TRYBUY" as const,
         oggetto: "Valutazione indicativa gratuita",
         corpo:
           "La sua Tiguan compie 4 anni: le inviamo una valutazione indicativa gratuita del suo usato, senza impegno. Vale la pena sapere quanto vale oggi.",
@@ -96,7 +96,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: -120,
         timingLabel: "Mese -4",
         canale: "WHATSAPP" as const,
-        tipo: "OFFERTA" as const,
+        tipo: "SHORT_TIME_OFFER" as const,
         oggetto: "Supervalutazione +1.500€",
         corpo:
           "La valutazione della sua Tiguan: 16.500€. Fino al 30 novembre riconosciamo una supervalutazione di +1.500€ sulla permuta per i modelli in promozione. Vuole passare a vederli sabato?",
@@ -108,7 +108,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: -90,
         timingLabel: "Mese -3",
         canale: "EVENTO" as const,
-        tipo: "EVENTO" as const,
+        tipo: "SHORT_TERM_COLLECTION" as const,
         oggetto: "Porte aperte riservate",
         corpo:
           "Invito a porte aperte / anteprima nuovo modello riservata ai clienti storici, con slot su prenotazione. Leva di status: «riservato ai clienti della concessionaria».",
@@ -137,7 +137,7 @@ export const DEMO_FUNNELS = [
     triggerNota:
       "Profilo incompleto (manca data di nascita, km attuali, consenso marketing, canale preferito) — oppure calendario: 15 ottobre e 1 aprile per il cambio gomme.",
     meccanica:
-      "Sweepstake (o operazione a premio) per l'arricchimento dati + offerta stagionale a slot limitati. Il premio percepito è alto; il costo è uno solo per tutta la base.",
+      "Sweepstake per arricchimento dati → Instant win reminder sui quasi convertiti → STO slot gomme → annuncio vincitore.",
     kpiTarget:
       "Profili completati, km aggiornati, slot gomme prenotati, tasso completamento dopo reminder.",
     notaCompliance:
@@ -149,7 +149,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 0,
         timingLabel: "Ottobre · giorno 0",
         canale: "EMAIL" as const,
-        tipo: "OFFERTA" as const,
+        tipo: "SWEEPSTAKE" as const,
         oggetto: "Completa profilo → estrazione gomme",
         corpo:
           "Completa il profilo della tua auto (2 minuti: km attuali e gomme montate) e partecipi all'estrazione di un treno di gomme invernali omaggio. Estrazione il 31 ottobre.",
@@ -161,7 +161,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 3,
         timingLabel: "Giorno 3",
         canale: "WHATSAPP" as const,
-        tipo: "MESSAGGIO" as const,
+        tipo: "INSTANT_WIN" as const,
         oggetto: "Reminder quasi convertiti",
         corpo:
           "Hai aperto l'invito ma non hai ancora completato il profilo: bastano 2 minuti per partecipare all'estrazione delle gomme invernali.",
@@ -173,7 +173,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 10,
         timingLabel: "Giorno 10",
         canale: "SMS" as const,
-        tipo: "OFFERTA" as const,
+        tipo: "SHORT_TIME_OFFER" as const,
         oggetto: "Cambio gomme · 40 slot",
         corpo:
           "Cambio gomme: solo 40 slot disponibili tra il 20 ottobre e il 10 novembre, prenotabili online. Deposito gomme incluso per chi prenota entro il 25.",
@@ -185,7 +185,7 @@ export const DEMO_FUNNELS = [
         giornoOffset: 31,
         timingLabel: "31 ottobre",
         canale: "EMAIL" as const,
-        tipo: "MESSAGGIO" as const,
+        tipo: "SWEEPSTAKE" as const,
         oggetto: "Annuncio vincitore",
         corpo:
           "Annuncio vincitore a tutta la base, con foto del cliente che ritira il premio (previo consenso). Secondo momento di marketing: prova sociale e anticipazione edizione primaverile.",
