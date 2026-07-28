@@ -63,6 +63,36 @@ enum CommunicationOutcome {
   ERRORE
 }
 
+enum FunnelStatus {
+  BOZZA
+  ATTIVO
+  IN_PAUSA
+  ARCHIVIATO
+}
+
+enum FunnelTriggerType {
+  DORMIENTE_OFFICINA
+  FINESTRA_RIACQUISTO
+  PROFILO_INCOMPLETO
+  STAGIONALE_GOMME
+  CUSTOM
+}
+
+enum FunnelChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  CHIAMATA_STAFF
+  EVENTO
+}
+
+enum FunnelStepKind {
+  MESSAGGIO
+  OFFERTA
+  EVENTO
+  HANDOFF_STAFF
+}
+
 // ─── Tenant ──────────────────────────────────────────────────────────────────
 
 model DealerGroup {
@@ -74,6 +104,7 @@ model DealerGroup {
   locations Location[]
   staff     StaffUser[]
   customers Customer[]
+  funnels   MarketingFunnel[]
 
   @@map("dealer_groups")
 }
@@ -253,4 +284,47 @@ model CommunicationLog {
   @@index([reminderId])
   @@index([inviatoIl])
   @@map("communication_logs")
+}
+
+// ─── Loyalty / marketing funnels ─────────────────────────────────────────────
+
+model MarketingFunnel {
+  id            String            @id @default(cuid())
+  groupId       String            @map("group_id")
+  nome          String
+  descrizione   String
+  triggerTipo   FunnelTriggerType @map("trigger_tipo")
+  triggerNota   String            @map("trigger_nota")
+  meccanica     String
+  kpiTarget     String            @map("kpi_target")
+  notaCompliance String?          @map("nota_compliance")
+  stato         FunnelStatus      @default(BOZZA)
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  group DealerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  steps FunnelStep[]
+
+  @@index([groupId])
+  @@index([stato])
+  @@map("marketing_funnels")
+}
+
+model FunnelStep {
+  id          String         @id @default(cuid())
+  funnelId    String         @map("funnel_id")
+  ordine      Int
+  giornoOffset Int           @map("giorno_offset")
+  timingLabel String         @map("timing_label")
+  canale      FunnelChannel
+  tipo        FunnelStepKind @default(MESSAGGIO)
+  oggetto     String?
+  corpo       String
+  offerta     String?
+  condizione  String?
+
+  funnel MarketingFunnel @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@index([funnelId])
+  @@unique([funnelId, ordine])
+  @@map("funnel_steps")
 }

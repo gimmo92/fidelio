@@ -7,6 +7,7 @@ import {
   ServiceType,
   StaffRole,
 } from "@prisma/client";
+import { DEMO_FUNNELS } from "./funnel-seed-data";
 
 const prisma = new PrismaClient();
 
@@ -81,6 +82,8 @@ const TELEFONI_PREFIX = ["333", "340", "347", "348", "349", "380", "389", "392"]
 
 async function main() {
   console.log("🧹 Pulizia dati esistenti…");
+  await prisma.funnelStep.deleteMany();
+  await prisma.marketingFunnel.deleteMany();
   await prisma.communicationLog.deleteMany();
   await prisma.reminder.deleteMany();
   await prisma.appointment.deleteMany();
@@ -343,6 +346,36 @@ async function main() {
     }
   }
 
+  console.log("🎯 Creazione funnel loyalty…");
+  for (const funnel of DEMO_FUNNELS) {
+    await prisma.marketingFunnel.create({
+      data: {
+        groupId: group.id,
+        nome: funnel.nome,
+        descrizione: funnel.descrizione,
+        triggerTipo: funnel.triggerTipo,
+        triggerNota: funnel.triggerNota,
+        meccanica: funnel.meccanica,
+        kpiTarget: funnel.kpiTarget,
+        notaCompliance: funnel.notaCompliance,
+        stato: funnel.stato,
+        steps: {
+          create: funnel.steps.map((s) => ({
+            ordine: s.ordine,
+            giornoOffset: s.giornoOffset,
+            timingLabel: s.timingLabel,
+            canale: s.canale,
+            tipo: s.tipo,
+            oggetto: s.oggetto,
+            corpo: s.corpo,
+            offerta: s.offerta,
+            condizione: s.condizione,
+          })),
+        },
+      },
+    });
+  }
+
   console.log("\n✅ Seed completato");
   console.log(`   Gruppo:     ${group.nome}`);
   console.log(`   Sedi:       2`);
@@ -351,6 +384,7 @@ async function main() {
   console.log(`   Veicoli:    ${vehicles.length}`);
   console.log(`   Interventi: ${serviceCount}`);
   console.log(`   Promemoria: ${reminderCount}`);
+  console.log(`   Funnel:     ${DEMO_FUNNELS.length}`);
   console.log("\n   Login staff demo (dopo setup Auth):");
   console.log("   • titolare@autobasso.it (OWNER, tutte le sedi)");
   console.log("   • vendite.torino@autobasso.it (SALES, Torino)");

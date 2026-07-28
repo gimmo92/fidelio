@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -21,6 +22,7 @@ const NAV = [
   { href: "/clienti", label: "Clienti", icon: Users },
   { href: "/appuntamenti", label: "Appuntamenti", icon: CalendarDays },
   { href: "/promemoria", label: "Promemoria", icon: Bell },
+  { href: "/funnel", label: "Funnel loyalty", icon: Sparkles },
   { href: "/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 

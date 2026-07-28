@@ -44,6 +44,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/clienti") ||
     path.startsWith("/appuntamenti") ||
     path.startsWith("/promemoria") ||
+    path.startsWith("/funnel") ||
     path.startsWith("/impostazioni");
 
   const isCustomerArea =
