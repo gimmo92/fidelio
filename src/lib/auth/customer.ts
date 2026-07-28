@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/demo";
 import type { Customer, DealerGroup, Vehicle } from "@prisma/client";
 
 export type CustomerSession = Customer & {
@@ -8,7 +9,22 @@ export type CustomerSession = Customer & {
   vehicles: Vehicle[];
 };
 
+async function getDemoCustomer(): Promise<CustomerSession | null> {
+  return prisma.customer.findFirst({
+    where: { vehicles: { some: {} } },
+    include: {
+      group: true,
+      vehicles: { orderBy: { targa: "asc" } },
+    },
+    orderBy: { cognome: "asc" },
+  });
+}
+
 export async function getCurrentCustomer(): Promise<CustomerSession | null> {
+  if (isDemoMode()) {
+    return getDemoCustomer();
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

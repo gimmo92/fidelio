@@ -1,8 +1,14 @@
+import { redirect } from "next/navigation";
+import { isDemoMode } from "@/lib/demo";
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 
 export const metadata = { title: "Area clienti" };
 
 export default function AreaClientiLoginPage() {
+  if (isDemoMode()) {
+    redirect("/area-clienti/dashboard");
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-border bg-white/80 px-4 py-4 backdrop-blur">

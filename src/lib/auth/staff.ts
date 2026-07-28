@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/demo";
 import type { StaffUser, Location, DealerGroup } from "@prisma/client";
 
 export type StaffSession = StaffUser & {
@@ -9,6 +10,7 @@ export type StaffSession = StaffUser & {
 };
 
 export async function getAuthUser() {
+  if (isDemoMode()) return null;
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,7 +18,19 @@ export async function getAuthUser() {
   return user;
 }
 
+async function getDemoStaff(): Promise<StaffSession | null> {
+  return prisma.staffUser.findFirst({
+    where: { ruolo: "OWNER" },
+    include: { group: true, location: true },
+    orderBy: { nome: "asc" },
+  });
+}
+
 export async function getCurrentStaff(): Promise<StaffSession | null> {
+  if (isDemoMode()) {
+    return getDemoStaff();
+  }
+
   const user = await getAuthUser();
   if (!user?.email) return null;
 
